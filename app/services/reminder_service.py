@@ -306,6 +306,125 @@ class ReminderService:
                 raise PermissionError("沒有權限建立不屬於自己的提醒")
         return DB.create_reminders_batch(reminders_data)
 
+    @staticmethod
+    def delete_member_profile(member_id: int, user_id: str):
+        """刪除提醒對象及其所有相關提醒"""
+        try:
+            # 使用 print 確保調試信息能被看到
+            print(f"[DELETE_MEMBER] 開始刪除成員 - member_id: {member_id}, user_id: {user_id}")
+            current_app.logger.info(f"[DELETE_MEMBER] 開始刪除成員 - member_id: {member_id}, user_id: {user_id}")
+            
+            # 獲取成員資訊並檢查權限
+            member = DB.get_member_by_id(member_id)
+            print(f"[DELETE_MEMBER] 查詢成員結果: {member}")
+            current_app.logger.info(f"[DELETE_MEMBER] 查詢成員結果: {member}")
+            
+            if not member:
+                print(f"[DELETE_MEMBER] 找不到成員 - member_id: {member_id}")
+                current_app.logger.warning(f"[DELETE_MEMBER] 找不到成員 - member_id: {member_id}")
+                return False
+                
+            if member.get('recorder_id') != user_id:
+                print(f"[DELETE_MEMBER] 權限不足 - member recorder_id: {member.get('recorder_id')}, user_id: {user_id}")
+                current_app.logger.warning(f"[DELETE_MEMBER] 權限不足 - member recorder_id: {member.get('recorder_id')}, user_id: {user_id}")
+                return False
+            
+            member_name = member['member']
+            print(f"[DELETE_MEMBER] 準備刪除成員: {member_name}")
+            current_app.logger.info(f"[DELETE_MEMBER] 準備刪除成員: {member_name}")
+            
+            # 檢查是否為可刪除的成員（不能是綁定的家人）
+            deletable_members = DB.get_deletable_members(user_id)
+            print(f"[DELETE_MEMBER] 可刪除成員列表: {[m.get('id') for m in deletable_members]}")
+            current_app.logger.info(f"[DELETE_MEMBER] 可刪除成員列表: {[m.get('id') for m in deletable_members]}")
+            
+            is_deletable = any(m.get('id') == member_id for m in deletable_members)
+            print(f"[DELETE_MEMBER] 成員是否可刪除: {is_deletable}")
+            current_app.logger.info(f"[DELETE_MEMBER] 成員是否可刪除: {is_deletable}")
+            
+            if not is_deletable:
+                print(f"[DELETE_MEMBER] 嘗試刪除不可刪除的成員：{member_name} (ID: {member_id})")
+                current_app.logger.warning(f"[DELETE_MEMBER] 嘗試刪除不可刪除的成員：{member_name} (ID: {member_id})")
+                return False
+            
+            # 按照正確的順序刪除所有相關數據，避免外鍵約束問題
+            print(f"[DELETE_MEMBER] 開始按順序刪除相關數據")
+            current_app.logger.info(f"[DELETE_MEMBER] 開始按順序刪除相關數據")
+            
+            # 1. 先刪除該成員的所有提醒 (medicine_schedule 表)
+            deleted_reminders = DB.delete_reminders_for_member(user_id, member_name)
+            print(f"[DELETE_MEMBER] 已刪除成員 {member_name} 的 {deleted_reminders} 筆提醒")
+            current_app.logger.info(f"[DELETE_MEMBER] 已刪除成員 {member_name} 的 {deleted_reminders} 筆提醒")
+            
+            # 2. 刪除該成員的藥歷記錄 (medication_main, medication_records, record_details 表)
+            try:
+                records = DB.get_records_by_member(user_id, member_name)
+                deleted_records = 0
+                for record in records:
+                    if record.get('mm_id'):
+                        result = DB.delete_record_by_mm_id(user_id, record.get('mm_id'))
+                        if result > 0:
+                            deleted_records += 1
+                print(f"[DELETE_MEMBER] 已刪除成員 {member_name} 的 {deleted_records} 筆藥歷記錄")
+                current_app.logger.info(f"[DELETE_MEMBER] 已刪除成員 {member_name} 的 {deleted_records} 筆藥歷記錄")
+            except Exception as e:
+                print(f"[DELETE_MEMBER] 刪除藥歷記錄時發生錯誤: {e}")
+                current_app.logger.warning(f"[DELETE_MEMBER] 刪除藥歷記錄時發生錯誤: {e}")
+            
+            # 3. 刪除該成員的健康記錄 (health_log 表)
+            try:
+                from app.utils.db import get_db_connection
+                db = get_db_connection()
+                if db:
+                    with db.cursor() as cursor:
+                        cursor.execute("DELETE FROM health_log WHERE recorder_id = %s AND target_person = %s", (user_id, member_name))
+                        deleted_health_logs = cursor.rowcount
+                        db.commit()
+                        print(f"[DELETE_MEMBER] 已刪除成員 {member_name} 的 {deleted_health_logs} 筆健康記錄")
+                        current_app.logger.info(f"[DELETE_MEMBER] 已刪除成員 {member_name} 的 {deleted_health_logs} 筆健康記錄")
+            except Exception as e:
+                print(f"[DELETE_MEMBER] 刪除健康記錄時發生錯誤: {e}")
+                current_app.logger.warning(f"[DELETE_MEMBER] 刪除健康記錄時發生錯誤: {e}")
+            
+            # 4. 最後刪除成員記錄 (members 表)
+            deleted_member = DB.delete_member_by_name(user_id, member_name)
+            print(f"[DELETE_MEMBER] 刪除成員記錄結果: {deleted_member}")
+            current_app.logger.info(f"[DELETE_MEMBER] 刪除成員記錄結果: {deleted_member}")
+            
+            if deleted_member > 0:
+                print(f"[DELETE_MEMBER] 成功刪除成員：{member_name} (ID: {member_id})")
+                current_app.logger.info(f"[DELETE_MEMBER] 成功刪除成員：{member_name} (ID: {member_id})")
+                return True
+            else:
+                print(f"[DELETE_MEMBER] 刪除成員失敗：{member_name} (ID: {member_id})")
+                current_app.logger.error(f"[DELETE_MEMBER] 刪除成員失敗：{member_name} (ID: {member_id})")
+                return False
+                
+        except Exception as e:
+            print(f"[DELETE_MEMBER] 刪除成員時發生錯誤：{e}")
+            current_app.logger.error(f"[DELETE_MEMBER] 刪除成員時發生錯誤：{e}")
+            import traceback
+            print(f"[DELETE_MEMBER] 錯誤詳情：{traceback.format_exc()}")
+            current_app.logger.error(f"[DELETE_MEMBER] 錯誤詳情：{traceback.format_exc()}")
+            return False
+
+    @staticmethod
+    def get_deletable_members(user_id: str):
+        """獲取可刪除的提醒對象列表"""
+        return DB.get_deletable_members(user_id)
+
+    @staticmethod
+    def create_member_profile(user_id: str, member_name: str):
+        """創建新的提醒對象"""
+        try:
+            # 使用 DB.add_member 方法創建新成員
+            DB.add_member(user_id, member_name)
+            current_app.logger.info(f"成功創建成員：{member_name} (用戶: {user_id})")
+            return True
+        except Exception as e:
+            current_app.logger.error(f"創建成員失敗：{e}")
+            return False
+
 # --- 背景排程器相關函式 ---
 
 def check_and_send_reminders(app):

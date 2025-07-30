@@ -162,7 +162,6 @@ def create_reminder_management_menu():
                     margin='sm',
                     contents=[
                         TextComponent(text='🔍 「查詢功能」語音輸入', weight='bold', size='md', color='#1565C0'),
-                        # TextComponent(text='語音輸入範例：', size='sm', color='#0D47A1', margin='xs'),
                         TextComponent(text='"查詢本人的用藥提醒"', size='xs', color='#424242', wrap=True, margin='xs'),
                         TextComponent(text='"查詢家人的用藥提醒"', size='xs', color='#424242', wrap=True, margin='xs')
                     ]

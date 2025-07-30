@@ -246,7 +246,9 @@ class DB:
         【新增】獲取可刪除的提醒對象（僅限使用者手動建立，且非綁定關係的成員）。
         """
         db = get_db_connection()
-        if not db: return []
+        if not db: 
+            print(f"[DEBUG] get_deletable_members({user_id}) - 資料庫連線失敗")
+            return []
         with db.cursor() as cursor:
             query = """
                 SELECT m.* 
@@ -256,8 +258,14 @@ class DB:
                 AND m.member != '本人'
                 AND ir.recipient_line_id IS NULL
             """
+            print(f"[DEBUG] get_deletable_members({user_id}) - 執行查詢: {query}")
             cursor.execute(query, (user_id,))
-            return cursor.fetchall()
+            result = cursor.fetchall()
+            print(f"[DEBUG] get_deletable_members({user_id}) 查詢結果: {len(result) if result else 0} 個可刪除成員")
+            if result:
+                for member in result:
+                    print(f"[DEBUG] 可刪除成員: ID={member.get('id')}, 名稱={member.get('member')}")
+            return result
             
     # --- 家人綁定 (來自組員) ---
     @staticmethod
@@ -675,11 +683,18 @@ class DB:
     def get_member_by_id(member_id):
         """根据ID获取成员信息"""
         db = get_db_connection()
-        if not db: return None
+        if not db: 
+            print(f"[DEBUG] get_member_by_id({member_id}) - 資料庫連線失敗")
+            return None
         with db.cursor() as cursor:
             query = "SELECT * FROM members WHERE id = %s"
+            print(f"[DEBUG] get_member_by_id({member_id}) - 執行查詢: {query}")
             cursor.execute(query, (member_id,))
-            return cursor.fetchone()
+            result = cursor.fetchone()
+            print(f"[DEBUG] get_member_by_id({member_id}) 查詢結果: {result}")
+            if result:
+                print(f"[DEBUG] 成員詳情: ID={result.get('id')}, 名稱={result.get('member')}, 建立者={result.get('recorder_id')}")
+            return result
 
     @staticmethod
     def get_self_member(user_id):

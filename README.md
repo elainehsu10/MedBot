@@ -6,10 +6,11 @@
 ![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)
 ![LINE Bot](https://img.shields.io/badge/LINE-Bot%20API-00C300.svg)
 ![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Run-4285F4.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **一個功能完整的 LINE Bot 智能藥品管理系統**
 
-
+[功能特色](#-功能特色) • [快速開始](#-快速開始) • [部署指南](#-部署) • [API 文檔](#-api-文檔) • [貢獻指南](#-貢獻)
 
 </div>
 
@@ -92,10 +93,10 @@ SECRET_KEY=your_secret_key
 
 | 指令類型 | 範例語音指令 | 說明 |
 |---------|-------------|------|
-| **新增提醒對象** | 「新增提醒對象媽媽」<br>「幫我新增提醒對象奶奶」 | 新增指定名稱的提醒對象 |
-| **設定用藥提醒** | 「提醒我每天早晚八點吃一顆維他命」<br>「新增用藥提醒，維他命，每天早上9:00，每次一顆」 | 建立新的提醒對象 |
-| **查詢功能** | 「查詢本人的用藥提醒」<br>「查詢家人的用藥提醒」 | 以家人身份新增提醒對象 |
-
+| **新增提醒對象** | 「新增提醒對象媽媽」<br>「我要新增提醒對象爸爸」<br>「幫我新增提醒對象奶奶」 | 新增指定名稱的提醒對象 |
+| **新增家人** | 「新增家人弟弟」<br>「我要新增家人姊姊」<br>「幫我新增家人阿姨」 | 以家人身份新增提醒對象 |
+| **建立提醒對象** | 「建立提醒對象外婆」<br>「我要建立提醒對象小明」 | 建立新的提醒對象 |
+| **其他變體** | 「新增成員小華」<br>「新增家庭成員叔叔」 | 其他自然語言變體 |
 
 #### 功能特色
 
@@ -106,7 +107,8 @@ SECRET_KEY=your_secret_key
 - 🔍 **完整測試**: 通過多項測試案例驗證解析邏輯
 
 #### 使用方式
-1. 在 LINE Bot 對話中，點擊 LINE 聊天室中的麥克風按鈕錄製語音
+
+1. 在 LINE Bot 對話中，長按麥克風按鈕錄製語音
 2. 清楚說出指令，例如：「新增提醒對象媽媽」
 3. 系統會自動識別語音並新增提醒對象
 4. 收到成功確認訊息後即可為該成員設定用藥提醒
@@ -114,6 +116,7 @@ SECRET_KEY=your_secret_key
 #### 技術實作
 
 - **語音識別**: Google Cloud Speech-to-Text API
+- **語音優化**: Google Gemini AI 優化識別結果
 - **指令解析**: 正則表達式匹配多種語音指令格式
 - **智能過濾**: 自動過濾無效名稱和重複成員
 
@@ -143,32 +146,6 @@ SECRET_KEY=your_secret_key
 └── run.py                # 應用程式入口點
 ```
 
-## 🔄 CI/CD 流程
-
-本專案使用 GitHub Actions 實現自動化 CI/CD：
-
-### 主要工作流程
-
-1. **CI/CD Pipeline** (`.github/workflows/ci-cd.yml`)
-   - 程式碼品質檢查
-   - 自動化測試
-   - Docker 映像建構和推送
-   - 自動部署到 staging/production
-
-2. **GCP 部署** (`.github/workflows/deploy-gcp.yml`)
-   - 部署到 Google Cloud Run
-   - 環境變數管理
-   - 健康檢查
-
-3. **安全掃描** (`.github/workflows/security-scan.yml`)
-   - 依賴漏洞掃描
-   - 程式碼安全分析
-   - Docker 映像安全檢查
-
-### 部署環境
-
-- **Staging**: `develop` 分支自動部署
-- **Production**: `main` 分支自動部署
 
 
 ## 🙏 致謝

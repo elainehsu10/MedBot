@@ -62,7 +62,14 @@ def handle_postback(event, user_id):
     
     elif action == 'execute_delete_member_profile':
         member_id = int(data.get('member_id', [0])[0])
-        if reminder_service.ReminderService.delete_member_profile(member_id, user_id):
+        print(f"[HANDLER] 執行刪除成員 - member_id: {member_id}, user_id: {user_id}")
+        current_app.logger.info(f"[HANDLER] 執行刪除成員 - member_id: {member_id}, user_id: {user_id}")
+        
+        result = reminder_service.ReminderService.delete_member_profile(member_id, user_id)
+        print(f"[HANDLER] 刪除結果: {result}")
+        current_app.logger.info(f"[HANDLER] 刪除結果: {result}")
+        
+        if result:
             _reply_message(reply_token, TextSendMessage(text="✅ 已成功刪除該提醒對象及其所有提醒。"))
         else:
             _reply_message(reply_token, TextSendMessage(text="❌ 刪除失敗，找不到對象或權限不足。"))
@@ -270,23 +277,12 @@ def show_member_management(user_id, reply_token):
 def show_member_deletion_menu(user_id, reply_token):
     """顯示成員刪除選單"""
     try:
-        members = UserService.get_user_members(user_id)
-        deletable_members = [m for m in members if m['member'] != '本人']  # 不能刪除本人
+        # 使用 ReminderService 獲取可刪除的成員列表
+        deletable_members = reminder_service.ReminderService.get_deletable_members(user_id)
         
-        if not deletable_members:
-            _reply_message(reply_token, TextSendMessage(text="沒有可刪除的提醒對象。"))
-            return
-        
-        # 創建快速回覆按鈕
-        quick_reply_buttons = []
-        for member in deletable_members:
-            quick_reply_buttons.append(
-                QuickReplyButton(action=MessageAction(label=f"刪除 {member['member']}", text=f"確認刪除 {member['member']}"))
-            )
-        
-        quick_reply = QuickReply(items=quick_reply_buttons)
-        message = TextSendMessage(text="請選擇要刪除的提醒對象：", quick_reply=quick_reply)
-        _reply_message(reply_token, message)
+        # 使用 flex_member 創建專業的刪除選單
+        flex_message = flex_member.create_deletable_members_flex(deletable_members, user_id)
+        _reply_message(reply_token, flex_message)
         
     except Exception as e:
         current_app.logger.error(f"顯示成員刪除選單錯誤: {e}")
