@@ -133,10 +133,9 @@ def create_reminder_management_menu():
                     margin='sm',
                     contents=[
                         TextComponent(text='💊 「用藥提醒設定」語音輸入', weight='bold', size='md', color='#E65100'),
-                        # TextComponent(text='語音輸入範例：', size='sm', color='#BF360C', margin='xs'),
-                        TextComponent(text='"新增用藥提醒，普拿疼，飯後吃，', size='xs', color='#424242', wrap=True, margin='xs'),
+                        TextComponent(text='"新增用藥提醒，維他命，每天早上9:00，', size='xs', color='#424242', wrap=True, margin='xs'),
                         TextComponent(text='  每次一顆"', size='xs', color='#424242', wrap=True, margin='xs'),
-                        TextComponent(text='"提醒我每天早上八點吃一顆血壓藥"', size='xs', color='#424242', wrap=True, margin='xs')
+                        TextComponent(text='"提醒我每天早晚八點吃一顆普拿疼"', size='xs', color='#424242', wrap=True, margin='xs')
                     ]
                 ),
                 
@@ -149,7 +148,6 @@ def create_reminder_management_menu():
                     margin='sm',
                     contents=[
                         TextComponent(text='👨‍👩‍👧‍👦 「新增家人」語音輸入', weight='bold', size='md', color='#2E7D32'),
-                        # TextComponent(text='語音輸入範例：', size='sm', color='#1B5E20', margin='xs'),
                         TextComponent(text='"新增提醒對象媽媽"', size='xs', color='#424242', wrap=True, margin='xs'),
                         TextComponent(text='"新增家人爸爸"', size='xs', color='#424242', wrap=True, margin='xs')
                     ]
