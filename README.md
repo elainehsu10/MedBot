@@ -6,11 +6,10 @@
 ![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)
 ![LINE Bot](https://img.shields.io/badge/LINE-Bot%20API-00C300.svg)
 ![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Run-4285F4.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **一個功能完整的 LINE Bot 智能藥品管理系統**
 
-[功能特色](#-功能特色) • [快速開始](#-快速開始) • [部署指南](#-部署) • [API 文檔](#-api-文檔) • [貢獻指南](#-貢獻)
+
 
 </div>
 
